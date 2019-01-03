@@ -2,6 +2,11 @@ from __future__ import print_function
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+import base64
+from gtts import gTTS
+import pygame
+import vlc
+import time
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
@@ -25,22 +30,50 @@ def main():
     label_id_two = 'UNREAD'
 
     # Call the Gmail API
-    results = service.users().messages().list(userId=user_id, labelIds=[label_id_one, label_id_two]).execute()
-
-    # print ('Message snippet: %s' % results['messages'])
+    results = service.users().messages().list(userId=user_id, labelIds=[label_id_one], maxResults=1).execute()
 
     msglist = results['messages']
 
-    print("Total unread messages in inbox: ", str(len(msglist)))
+    # print("Total unread messages in inbox: ", str(len(msglist)))
+
 
     for mssg in msglist:
         m_id = mssg['id']
         message = service.users().messages().get(userId=user_id, id=m_id).execute()
+        print('Message snippet: %s' % message['snippet'])
+        payLd = message['payload']
 
-        try:
-            print('Message snippet: %s' % message['snippet'])
-        except:
-            pass
+        mssg_parts = payLd['parts']
+        part_one = mssg_parts[0]
+        part_body = part_one['body']
+        part_data = part_body['data']
+
+        clean_one = part_data.replace("-", "+")  # decoding from Base64 to UTF-8
+        clean_one = clean_one.replace("_", "/")  # decoding from Base64 to UTF-8
+        clean_two = base64.b64decode(bytes(clean_one, 'UTF-8'))  # decoding from Base64 to UTF-8
+
+        msg = str(clean_two)
+
+        print('Message snippet: %s' % msg)
+
+        tts = gTTS(msg)
+        tts.save('message.mp3')
+        pygame.mixer.init()
+        pygame.mixer.music.load("message.mp3")
+        pygame.mixer.music.play(loops=0, start=0.0)
+
+        # try:
+        #     print('Message snippet: %s' % message['snippet'])
+        #     # tts = gTTS(message['snippet'])
+        #     # tts.save('hello.mp3')
+        #     # pygame.mixer.init()
+        #     # pygame.mixer.music.load("hello.mp3")
+        #     # pygame.mixer.music.play()
+        #     # time.sleep(20)
+        #
+        # except:
+        #     pass
+
 
 if __name__ == '__main__':
     main()
