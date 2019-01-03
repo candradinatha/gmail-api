@@ -60,7 +60,8 @@ def main():
         tts.save('message.mp3')
         pygame.mixer.init()
         pygame.mixer.music.load("message.mp3")
-        pygame.mixer.music.play(loops=0, start=0.0)
+        pygame.mixer.music.play()
+        time.sleep(40)
 
         # try:
         #     print('Message snippet: %s' % message['snippet'])
